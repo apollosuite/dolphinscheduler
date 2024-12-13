@@ -114,6 +114,7 @@ public class SqlParameters extends AbstractParameters {
 
     private int limit;
 
+
     public int getLimit() {
         return limit;
     }

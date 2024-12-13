@@ -2122,5 +2122,8 @@ CREATE TABLE t_ds_listener_event(
 );
 comment on column t_ds_listener_event.sign is 'sign=sha1(content)';
 
+DROP SEQUENCE IF EXISTS t_ds_listener_event_id_sequence;
+CREATE SEQUENCE t_ds_listener_event_id_sequence;
+ALTER TABLE t_ds_listener_event ALTER COLUMN id SET DEFAULT NEXTVAL('t_ds_listener_event_id_sequence');
 create index idx_listener_event_post_status on t_ds_listener_event (post_status);
 create index idx_listener_event_sign on t_ds_listener_event (sign);

@@ -68,6 +68,21 @@ class SqlTaskTest {
     }
 
     @Test
+    void testReplacingProcedureCallSql(){
+        String createTagSql = "call sys.create_tag(\"sl.sl_sc_tk_creator_profile_v2\",\"${dt}\");";
+        String expected = "call sys.create_tag(\"sl.sl_sc_tk_creator_profile_v2\",\"?\");";
+        Assertions.assertEquals(expected, createTagSql.replaceAll(sqlTask.rgex, "?"));
+
+        Map<Integer, Property> sqlParamsMap = new HashMap<>();
+        Map<Integer, Property> expectedSQLParamsMap = new HashMap<>();
+        Map<String,Property> paramsMap = new HashMap<>();
+        expectedSQLParamsMap.put(1, new Property("dt", Direct.IN, DataType.VARCHAR, "2024-12-12"));
+        paramsMap.put("dt", new Property("dt", Direct.IN, DataType.VARCHAR, "2024-12-12"));
+        sqlTask.setSqlParamsMap(createTagSql, sqlTask.rgex, sqlParamsMap,paramsMap, 1);
+        Assertions.assertEquals(sqlParamsMap, expectedSQLParamsMap);
+    }
+
+    @Test
     void testReplacingHiveLoadSql() {
         String hiveLoadSql = "load inpath '/tmp/test_table/dt=${dt}' into table test_table partition(dt=${dt})";
         String expected = "load inpath '/tmp/test_table/dt=?' into table test_table partition(dt=?)";

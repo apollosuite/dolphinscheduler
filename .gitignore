@@ -52,3 +52,6 @@ dolphinscheduler-common/test
 dolphinscheduler-worker/logs
 dolphinscheduler-master/logs
 dolphinscheduler-api/logs
+.github/actions/auto-assign-action/
+.github/actions/maximize-build-space/
+.github/actions/workflow-telemetry-action/

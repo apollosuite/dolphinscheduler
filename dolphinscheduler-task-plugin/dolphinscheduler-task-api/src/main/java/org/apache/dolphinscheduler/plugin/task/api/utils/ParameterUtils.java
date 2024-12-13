@@ -153,6 +153,43 @@ public class ParameterUtils {
         }
     }
 
+    public static String interpolateInParameter(String sql, Map<Integer, Property> params) {
+        if (params == null || params.isEmpty()) {
+            return sql;
+        }
+        StringBuilder ret = new StringBuilder(sql);
+        Matcher m = Pattern.compile("\\?").matcher(sql);
+        int index = 1;
+        while (m.find()) {
+            Property property = params.get(index++);
+            if (property == null) {
+                continue;
+            }
+            String value = property.getValue();
+            if (DataType.LIST.equals(property.getType())) {
+                List<Object> valueList = JSONUtils.toList(value, Object.class);
+                if (valueList.isEmpty() && StringUtils.isNotBlank(value)) {
+                    valueList.add(value);
+                }
+                StringBuilder tempReplace = new StringBuilder();
+                for (int j = 0; j < valueList.size(); j++) {
+                    tempReplace.append(valueList.get(j));
+                    if (j != valueList.size() - 1) {
+                        tempReplace.append(",");
+                         }
+                }
+                ret.replace(m.start(), m.end(), tempReplace.toString());
+                // After replacement, the string length will change, so a reset is required
+                m.reset(ret.toString());
+            } else {
+                ret.replace(m.start(), m.end(), value);
+                // After replacement, the string length will change, so a reset is required
+                m.reset(ret.toString());
+            }
+        }
+        return ret.toString();
+    }
+
     public static Serializable getParameterValue(Property property) {
         if (property == null) {
             return null;

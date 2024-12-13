@@ -28,6 +28,7 @@ import org.apache.dolphinscheduler.plugin.task.api.TaskCallBack;
 import org.apache.dolphinscheduler.plugin.task.api.TaskConstants;
 import org.apache.dolphinscheduler.plugin.task.api.TaskException;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
+import org.apache.dolphinscheduler.plugin.task.api.enums.DataType;
 import org.apache.dolphinscheduler.plugin.task.api.enums.Direct;
 import org.apache.dolphinscheduler.plugin.task.api.enums.SqlType;
 import org.apache.dolphinscheduler.plugin.task.api.enums.TaskTimeoutStrategy;
@@ -312,7 +313,7 @@ public class SqlTask extends AbstractTask {
     }
 
     private String executeQuery(Connection connection, SqlBinds sqlBinds, String handlerType) throws Exception {
-        try (PreparedStatement statement = prepareStatementAndBind(connection, sqlBinds)) {
+        try (PreparedStatement statement = prepareInterpolatedSql(connection, sqlBinds)) {
             log.info("{} statement execute query, for sql: {}", handlerType, sqlBinds.getSql());
             ResultSet resultSet = statement.executeQuery();
             return resultProcess(resultSet);
@@ -323,7 +324,7 @@ public class SqlTask extends AbstractTask {
                                  String handlerType) throws Exception {
         int result = 0;
         for (SqlBinds sqlBind : statementsBinds) {
-            try (PreparedStatement statement = prepareStatementAndBind(connection, sqlBind)) {
+            try (PreparedStatement statement = prepareInterpolatedSql(connection, sqlBind)) {
                 result = statement.executeUpdate();
                 log.info("{} statement execute update result: {}, for sql: {}", handlerType, result,
                         sqlBind.getSql());
@@ -360,6 +361,21 @@ public class SqlTask extends AbstractTask {
             } catch (SQLException e) {
                 log.error("close connection error : {}", e.getMessage(), e);
             }
+        }
+    }
+
+    private PreparedStatement prepareInterpolatedSql(Connection connection, SqlBinds sqlBinds) {
+        boolean timeoutFlag = taskExecutionContext.getTaskTimeoutStrategy() == TaskTimeoutStrategy.FAILED
+                || taskExecutionContext.getTaskTimeoutStrategy() == TaskTimeoutStrategy.WARNFAILED;
+        try {
+            String interpolatedSql = ParameterUtils.interpolateInParameter(sqlBinds.getSql(),
+                    sqlBinds.getParamsMap());
+            PreparedStatement stmt = connection.prepareStatement(interpolatedSql);
+            log.info("prepare statement interpolated sql : {}, original sql parameters : {}", interpolatedSql,
+                    sqlBinds.getParamsMap());
+            return stmt;
+        }catch (Exception e){
+            throw new TaskException("SQL task prepareStatementAndBind error", e);
         }
     }
 

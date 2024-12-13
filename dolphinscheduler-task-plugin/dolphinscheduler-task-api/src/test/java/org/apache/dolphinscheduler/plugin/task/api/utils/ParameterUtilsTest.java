@@ -90,6 +90,16 @@ public class ParameterUtilsTest {
     }
 
     @Test
+    public void testInterpolateInParams(){
+        Map<Integer, Property> params2 = new HashMap<>();
+        params2.put(1, new Property(null, null, DataType.LIST, JSONUtils.toJsonString(Lists.newArrayList("c1"))));
+        params2.put(2, new Property(null, null, DataType.DATE, "2020-06-30"));
+        String sql2 = "select * from test where col1 in (?) and date='?'";
+        String interpolated_sql = ParameterUtils.interpolateInParameter(sql2, params2);
+        assert(interpolated_sql.equals("select * from test where col1 in (c1) and date='2020-06-30'"));
+    }
+
+    @Test
     public void testConvertParameterPlaceholders2() {
         String parameterString =
                 "${user} is userName, '$[1]' '$[add_months(yyyyMMdd,12*2)]' '$[add_months(yyyyMMdd,-12*2)]' '$[add_months(yyyyMMdd,3)]' '$[add_months(yyyyMMdd,-4)]' "
